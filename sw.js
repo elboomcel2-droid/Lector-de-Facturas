@@ -12,14 +12,16 @@
  */
 
 /** Nombre de la copia (caché). Cambiarlo borra las copias anteriores. */
-const VERSION = "lector-xml-v4";
+const VERSION = "lector-xml-v5";
 
 /** Archivos que se guardan al instalar para funcionar sin internet. */
 const ARCHIVOS = [
   "./",
   "./index.html",
+  "./recibo.html",
   "./manifest.webmanifest",
   "./css/estilos.css",
+  "./css/recibo.css",
   "./js/utilidades.js",
   "./js/campos.js",
   "./js/cfdi.js",
@@ -28,6 +30,9 @@ const ARCHIVOS = [
   "./js/exportar.js",
   "./js/app.js",
   "./js/ordenar.js",
+  "./js/recibo-conteo.js",
+  "./js/recibo-escaner.js",
+  "./js/recibo-app.js",
   "./js/pwa.js",
   "./img/logo-cabecera.png",
   "./img/icon-192.png",

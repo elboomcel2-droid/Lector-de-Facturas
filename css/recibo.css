@@ -1,0 +1,148 @@
+/* =========================================================
+   recibo.css
+   Estilos de la página "Revisión de mercancía".
+   Complementa a estilos.css (colores y tipografías vienen de ahí).
+
+   Pensado para usarse de pie en el almacén: textos grandes,
+   botones amplios y colores que se distinguen de un vistazo.
+   ========================================================= */
+
+/* ---------- menú entre páginas ---------- */
+.menu { display: flex; gap: 4px; flex-wrap: wrap; }
+.menu a {
+  color: var(--gris); text-decoration: none;
+  font-family: var(--display); font-size: 17px; font-weight: 600;
+  padding: 6px 12px; border: 1px solid transparent;
+}
+.menu a:hover { color: var(--hueso); border-color: var(--linea); }
+.menu a[aria-current] { color: var(--negro); background: var(--oro); }
+
+/* ---------- encabezado del conteo ---------- */
+.encabezado-conteo {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 10px;
+}
+.encabezado-conteo strong { font-family: var(--display); font-size: 24px; display: block; }
+.encabezado-conteo .muted { font-size: 14px; }
+
+/* ---------- avance ---------- */
+.barra-avance { height: 12px; background: var(--panel-2); border: 1px solid var(--linea); }
+.barra-avance > div { height: 100%; width: 0; background: var(--oro); transition: width .25s; }
+
+.marcador { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 10px 0 18px; }
+.marcador div { line-height: 1.15; }
+.marcador b { display: block; font-family: var(--display); font-size: 26px; font-weight: 700; }
+.marcador span { font-size: 13px; color: var(--gris); text-transform: uppercase; letter-spacing: .04em; }
+.marcador .falta b { color: var(--rojo); }
+.marcador .sobra b { color: #E39B5A; }
+.marcador .listo b { color: var(--verde); }
+
+/* ---------- escaneo ---------- */
+.escaneo { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; }
+.campo-escaneo { flex: 1 1 320px; }
+.campo-escaneo .etiqueta {
+  display: block; font-size: 13px; color: var(--gris);
+  text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px;
+}
+#campoCodigo {
+  width: 100%; padding: 14px 16px;
+  background: var(--panel); color: var(--hueso);
+  border: 2px solid var(--oro);
+  font-family: var(--display); font-size: 26px; letter-spacing: .04em;
+}
+#campoCodigo::placeholder { color: #6d6962; letter-spacing: 0; font-size: 20px; }
+#btnCamara, #btnApagarCamara { padding: 14px 18px; }
+
+.ultimo { margin: 0 0 12px; font-size: 15px; }
+.ultimo.ok { color: var(--verde); }
+.ultimo.malo { color: var(--rojo); }
+
+/* ---------- cámara ---------- */
+.caja-camara { position: relative; margin-bottom: 14px; background: #000; max-width: 520px; }
+.caja-camara video { display: block; width: 100%; max-height: 320px; object-fit: cover; }
+.caja-camara .mira {
+  position: absolute; left: 10%; right: 10%; top: 35%; height: 30%;
+  border: 2px solid var(--oro); box-shadow: 0 0 0 2000px rgba(0, 0, 0, .35);
+}
+.caja-camara .btn { position: absolute; right: 10px; bottom: 10px; }
+
+/* ---------- filtros ---------- */
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.chip-filtro {
+  background: var(--panel); color: var(--hueso); border: 1px solid var(--linea);
+  padding: 8px 14px; font: 600 14px var(--texto); cursor: pointer;
+}
+.chip-filtro:hover { border-color: var(--oro); }
+.chip-filtro.activo { background: var(--oro); border-color: var(--oro); color: var(--negro); }
+#buscar, #buscarVentana {
+  flex: 1 1 200px; min-width: 0;
+  background: var(--panel-2); color: var(--hueso);
+  border: 1px solid #45423c; padding: 8px 10px; font: inherit;
+}
+
+/* ---------- lista de artículos ---------- */
+.partidas { display: grid; gap: 8px; margin-bottom: 22px; }
+.partida {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--linea);
+  border-left: 6px solid var(--gris);
+  padding: 10px 14px;
+}
+.partida.pendiente { border-left-color: #55514a; }
+.partida.parcial   { border-left-color: var(--oro); }
+.partida.completa  { border-left-color: var(--verde); background: #1a1f16; }
+.partida.sobra     { border-left-color: #E39B5A; background: #211c14; }
+.partida.nueva { animation: destello .6s ease; }
+@keyframes destello { from { background: #2c3320; } }
+
+.partida .datos { flex: 1 1 260px; min-width: 0; }
+.partida .codigo { font-family: var(--display); font-size: 22px; color: var(--oro-claro); letter-spacing: .02em; }
+.partida .desc { font-size: 13px; color: var(--gris); overflow-wrap: anywhere; }
+.partida .cuenta {
+  font-family: var(--display); font-size: 30px; font-weight: 700;
+  min-width: 108px; text-align: right; font-variant-numeric: tabular-nums;
+}
+.partida .cuenta small { font-size: 18px; color: var(--gris); font-weight: 600; }
+.partida.completa .cuenta { color: var(--verde); }
+.partida.sobra .cuenta { color: #E39B5A; }
+.partida .mas-menos { display: flex; gap: 6px; }
+.partida .mas-menos button {
+  width: 46px; height: 46px;
+  background: var(--panel-2); color: var(--hueso); border: 1px solid #45423c;
+  font: 700 24px var(--texto); line-height: 1; cursor: pointer;
+}
+.partida .mas-menos button:hover { border-color: var(--oro); }
+.vacio { color: var(--gris); padding: 18px; text-align: center; border: 1px dashed var(--linea); }
+
+.acciones-final { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
+
+/* ---------- ventana de código no reconocido ---------- */
+.ventana {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(0, 0, 0, .72);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.ventana-caja {
+  background: var(--panel); border: 1px solid var(--linea); border-top: 5px solid var(--rojo);
+  padding: 20px; width: min(620px, 100%); max-height: 88vh; overflow: auto;
+}
+.ventana-caja h2 { font-family: var(--display); font-size: 26px; margin: 0 0 10px; }
+.ventana-caja p { margin: 0 0 10px; }
+.ventana-caja .codigo { font-family: var(--display); font-size: 22px; color: var(--oro-claro); }
+.opciones { display: grid; gap: 6px; margin: 12px 0; max-height: 40vh; overflow: auto; }
+.opciones button {
+  text-align: left; background: var(--panel-2); color: var(--hueso);
+  border: 1px solid #45423c; padding: 10px 12px; font: inherit; cursor: pointer;
+}
+.opciones button:hover { border-color: var(--oro); }
+.opciones .cod { font-family: var(--display); font-size: 18px; color: var(--oro-claro); }
+.opciones .det { font-size: 13px; color: var(--gris); }
+.ventana-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- celular ---------- */
+@media (max-width: 620px) {
+  .partida .cuenta { min-width: 84px; font-size: 26px; }
+  .partida .mas-menos button { width: 52px; height: 52px; }
+  .marcador b { font-size: 22px; }
+  .menu a { font-size: 15px; padding: 5px 9px; }
+}

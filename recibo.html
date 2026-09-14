@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!--
+  Revisión de mercancía | El Boom Tractopartes
+  Segunda página de la app: cuenta la mercancía recibida contra la factura XML.
+  Comparte estilos y lógica de lectura del CFDI con la página principal.
+    - Estilos: css/estilos.css + css/recibo.css
+    - Lógica:  js/*.js (se cargan al final, en orden)
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#141414">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Revisión">
+<title>Revisión de mercancía | El Boom Tractopartes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<link rel="stylesheet" href="css/recibo.css">
+</head>
+<body>
+
+<div class="franja" aria-hidden="true"></div>
+
+<header class="cabecera">
+  <div class="cabecera-in">
+    <div class="marca">
+      <img class="logo" src="img/logo-cabecera.png" alt="Refaccionaria El Boom Tractopartes" width="199" height="80">
+      <h1>Revisión de mercancía</h1>
+    </div>
+    <div class="cabecera-der">
+      <nav class="menu">
+        <a href="index.html">Lector de facturas</a>
+        <a href="recibo.html" aria-current="page">Revisión de mercancía</a>
+      </nav>
+      <button class="btn principal" id="btnInstalar" hidden>Instalar app</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ PASO 1: CARGAR LA FACTURA ============ -->
+  <section id="secCargar">
+    <label id="zona" class="zona" for="entrada" tabindex="0">
+      <div class="icono" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+      </div>
+      <div>
+        <strong>Arrastra aquí el XML de la factura</strong><br>
+        <span>o haz clic para elegirlo. Es el mismo XML que usas en el lector de facturas.</span>
+      </div>
+      <input type="file" id="entrada" accept=".xml,text/xml,application/xml" hidden>
+    </label>
+    <div id="avisos" class="avisos"></div>
+
+    <!-- Revisiones empezadas que se pueden continuar -->
+    <div id="pendientes" hidden>
+      <div class="titulo"><div class="num">•</div><h2>Revisiones sin terminar</h2></div>
+      <p class="nota">Puedes continuar donde te quedaste, aunque hayas cerrado la app.</p>
+      <div id="listaPendientes" class="facturas"></div>
+    </div>
+  </section>
+
+  <!-- ============ PASO 2: CONTAR ============ -->
+  <section id="secContar" hidden>
+
+    <!-- Datos de la factura y avance -->
+    <div class="encabezado-conteo">
+      <div>
+        <strong id="provConteo"></strong>
+        <span id="datosConteo" class="muted"></span>
+      </div>
+      <button class="btn discreto" id="btnCerrar">Cerrar revisión</button>
+    </div>
+
+    <div class="barra-avance"><div id="avance"></div></div>
+    <div id="marcador" class="marcador"></div>
+
+    <!-- Escaneo -->
+    <div class="escaneo">
+      <label class="campo-escaneo">
+        <span class="etiqueta">Escanea o teclea el código</span>
+        <input type="text" id="campoCodigo" autocomplete="off" autocapitalize="off"
+               autocorrect="off" spellcheck="false" inputmode="text"
+               placeholder="Dispara la pistola aquí…">
+      </label>
+      <button class="btn" id="btnCamara" hidden>Usar cámara</button>
+    </div>
+    <p id="ultimo" class="ultimo" hidden></p>
+
+    <!-- Cámara -->
+    <div id="cajaCamara" class="caja-camara" hidden>
+      <video id="video" playsinline muted></video>
+      <div class="mira" aria-hidden="true"></div>
+      <button class="btn" id="btnApagarCamara">Apagar cámara</button>
+    </div>
+
+    <!-- Filtros y lista de artículos -->
+    <div class="filtros" role="group" aria-label="Filtrar artículos">
+      <button class="chip-filtro activo" data-filtro="todas">Todas</button>
+      <button class="chip-filtro" data-filtro="pendientes">Pendientes</button>
+      <button class="chip-filtro" data-filtro="completas">Completas</button>
+      <button class="chip-filtro" data-filtro="diferencias">Con diferencia</button>
+      <input type="search" id="buscar" placeholder="Buscar código o descripción" aria-label="Buscar artículo">
+    </div>
+
+    <div id="listaPartidas" class="partidas"></div>
+
+    <!-- Mercancía que no viene en la factura -->
+    <div id="cajaSobrantes" hidden>
+      <div class="titulo"><div class="num">!</div><h2>No viene en la factura</h2></div>
+      <div id="listaSobrantes" class="partidas"></div>
+    </div>
+
+    <div class="acciones-final">
+      <button class="btn principal" id="btnReporte">Descargar reporte</button>
+      <button class="btn" id="btnCopiarReporte">Copiar reporte</button>
+      <button class="btn discreto" id="btnReiniciar">Reiniciar conteo</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ VENTANA: CÓDIGO NO RECONOCIDO ============ -->
+<div id="ventana" class="ventana" hidden role="dialog" aria-modal="true" aria-labelledby="ventanaTitulo">
+  <div class="ventana-caja">
+    <h2 id="ventanaTitulo">Código no reconocido</h2>
+    <p>Leí <strong id="codigoLeido" class="codigo"></strong> y no coincide con ningún artículo de la factura.</p>
+    <p class="nota">Elige a qué artículo corresponde y lo recordaré para las próximas facturas de este proveedor.</p>
+    <input type="search" id="buscarVentana" placeholder="Buscar artículo…" aria-label="Buscar artículo">
+    <div id="opcionesVentana" class="opciones"></div>
+    <div class="ventana-botones">
+      <button class="btn" id="btnNoEsta">No está en la factura</button>
+      <button class="btn discreto" id="btnCancelar">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="anuncio" class="solo-lector" aria-live="polite"></div>
+
+<footer>Todo se procesa en este dispositivo; las facturas no se envían a ningún lado.</footer>
+
+<!-- El orden importa: cada archivo usa funciones de los anteriores -->
+<script src="js/utilidades.js"></script>
+<script src="js/campos.js"></script>
+<script src="js/cfdi.js"></script>
+<script src="js/xlsx.js"></script>
+<script src="js/recibo-conteo.js"></script>
+<script src="js/recibo-escaner.js"></script>
+<script src="js/recibo-app.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
