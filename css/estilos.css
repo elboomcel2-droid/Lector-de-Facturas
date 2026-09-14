@@ -1,0 +1,277 @@
+/* =========================================================
+   estilos.css
+   Lector de facturas XML | El Boom Tractopartes
+
+   Identidad: negro + amarillo del logo (#FFCE00), hexágonos,
+   franja de advertencia y textura grunge sutil.
+
+   Índice:
+     1. Variables (colores y tipografías)  ← cambia aquí la paleta
+     2. Base y textura
+     3. Cabecera (franja, logo, título)
+     4. Zona de carga
+     5. Secciones y títulos con hexágono
+     6. Tarjetas de facturas
+     7. Selectores de columnas y "Agregar columna"
+     8. Tablas
+     9. Resultado y botones
+    10. Adaptación a celular
+   ========================================================= */
+
+/* ---------- 1. Variables ---------- */
+:root {
+  --negro: #141414;
+  --panel: #1c1c1c;
+  --panel-2: #252525;
+  --linea: #353330;
+  --oro: #FFCE00;         /* amarillo del logo */
+  --oro-claro: #FFDD55;
+  --hueso: #ECE5D3;
+  --gris: #9A958A;
+  --rojo: #E0664F;
+  --azul: #7FA7C4;
+  --verde: #8DBB5A;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --texto: "Barlow", "Segoe UI", Arial, sans-serif;
+}
+/* ---------- 2. Base y textura ---------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--negro);
+  color: var(--hueso);
+  font-family: var(--texto);
+  font-size: 15px;
+  line-height: 1.45;
+  min-height: 100vh;
+}
+/* textura grunge sutil */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  opacity: .07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+body > * { position: relative; z-index: 1; }
+:focus-visible { outline: 3px solid var(--oro-claro); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ---------- 3. Cabecera ---------- */
+/* franja de advertencia */
+.franja {
+  height: 10px;
+  background: repeating-linear-gradient(-45deg, var(--oro) 0 14px, var(--negro) 14px 28px);
+}
+
+/* cabecera */
+.cabecera {
+  padding: 28px 24px 26px;
+  border-bottom: 1px solid var(--linea);
+  background:
+    linear-gradient(90deg, var(--negro) 35%, transparent),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23FFCE00' stroke-opacity='.16' stroke-width='1.5'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%23FFCE00' stroke-opacity='.1' stroke-width='1.5'/%3E%3C/svg%3E") right center / 56px 100px repeat;
+}
+.cabecera-in { max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 18px 32px; justify-content: space-between; }
+.marca { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.hex {
+  width: 64px; height: 56px;
+  background: var(--oro);
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  display: grid; place-items: center;
+  font-family: var(--display); font-weight: 800; font-size: 34px; color: var(--negro);
+}
+.logo { display: block; height: 80px; width: auto; }
+.cabecera-der { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.empresa { margin: 0; font-family: var(--display); font-weight: 600; font-size: 17px; color: var(--oro); letter-spacing: .02em; }
+h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(30px, 5vw, 44px); line-height: 1; letter-spacing: .01em; }
+.lema { margin: 0; max-width: 40ch; color: var(--gris); }
+
+main { max-width: 1200px; margin: 0 auto; padding: 26px 24px 60px; }
+
+/* ---------- 4. Zona de carga ---------- */
+.zona {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 240px;
+  border: 2px dashed #4a463f;
+  background: var(--panel);
+  cursor: pointer;
+  text-align: center;
+  padding: 28px;
+  transition: border-color .15s, background .15s;
+}
+.zona:hover, .zona.encima { border-color: var(--oro); background: #221f17; }
+.zona .icono { width: 54px; height: 48px; background: var(--panel-2); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); display: grid; place-items: center; color: var(--oro); margin-bottom: 6px; }
+.zona strong { font-family: var(--display); font-size: 24px; font-weight: 700; }
+.zona span { color: var(--gris); }
+.zona.compacta { min-height: 0; flex-direction: row; gap: 12px; padding: 14px 18px; justify-content: flex-start; text-align: left; }
+.zona.compacta .icono { width: 36px; height: 32px; margin: 0; }
+.zona.compacta .icono svg { width: 18px; height: 18px; }
+.zona.compacta strong { font-size: 18px; }
+
+.avisos { margin-top: 12px; display: grid; gap: 6px; }
+.aviso { border-left: 4px solid var(--rojo); background: #2a1c19; padding: 8px 12px; font-size: 14px; }
+
+/* ---------- 5. Secciones ---------- */
+section { margin-top: 34px; }
+.titulo { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
+.titulo .num {
+  width: 34px; height: 30px; flex: none;
+  background: var(--oro); color: var(--negro);
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  display: grid; place-items: center;
+  font-family: var(--display); font-weight: 800; font-size: 18px;
+}
+.titulo h2 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.1; }
+.nota { margin: -6px 0 14px; color: var(--gris); font-size: 14px; }
+
+/* ---------- 6. Tarjetas de facturas ---------- */
+.facturas { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.factura { position: relative; flex: 0 0 250px; }
+.factura-sel {
+  width: 100%; height: 100%;
+  text-align: left; font: inherit; color: inherit;
+  background: var(--panel); border: 1px solid var(--linea); border-top: 4px solid var(--linea);
+  padding: 12px 34px 12px 14px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.factura-sel:hover { border-top-color: #6b5a26; }
+.factura.activa .factura-sel { border-top-color: var(--oro); background: #211e17; }
+.factura-sel strong { font-family: var(--display); font-size: 18px; line-height: 1.15; }
+.factura-sel span { color: var(--gris); font-size: 13px; }
+.factura-sel .cuenta { color: var(--oro-claro); font-weight: 600; margin-top: 4px; }
+.quitar {
+  position: absolute; top: 8px; right: 6px;
+  width: 26px; height: 26px; border: 0; background: transparent; color: var(--gris);
+  font-size: 20px; line-height: 1; cursor: pointer;
+}
+.quitar:hover { color: var(--rojo); }
+
+/* ---------- 7. Selectores de columnas ---------- */
+.selectores { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.selector { background: var(--panel); border: 1px solid var(--linea); border-left: 5px solid var(--c); padding: 12px; display: block; }
+.chip { display: inline-block; background: var(--c); color: var(--negro); font-weight: 600; font-size: 13px; padding: 1px 8px; }
+.selector select {
+  display: block; width: 100%; margin-top: 8px;
+  background: var(--panel-2); color: var(--hueso);
+  border: 1px solid #45423c; padding: 9px 10px; font: inherit;
+}
+/* cabecera de cada columna: nombre + botón quitar */
+.selector-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.quitar-campo {
+  width: 26px; height: 26px; border: 0; background: transparent; color: var(--gris);
+  font-size: 20px; line-height: 1; cursor: pointer;
+}
+.quitar-campo:hover { color: var(--rojo); }
+.quitar-campo:disabled { opacity: .25; cursor: not-allowed; }
+
+/* tarjeta para agregar columna */
+.selector.agregar { border: 2px dashed #4a463f; background: transparent; }
+.agregar-titulo { font-family: var(--display); font-weight: 700; font-size: 17px; color: var(--oro); }
+.agregar-fila { display: flex; gap: 8px; margin-top: 8px; }
+.agregar-fila select { margin-top: 0; flex: 1; min-width: 0; }
+.agregar-fila .btn { padding: 8px 12px; }
+
+.check { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; cursor: pointer; font-size: 14px; }
+.check input { width: 18px; height: 18px; accent-color: var(--oro); }
+.check small { color: var(--gris); }
+
+/* ---------- 8. Tablas ---------- */
+.tabla-caja { overflow: auto; max-height: 420px; border: 1px solid var(--linea); background: var(--panel); }
+.tabla-caja.alta { max-height: 560px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--panel-2); color: var(--hueso);
+  text-align: left; font-family: var(--display); font-weight: 600; font-size: 15px;
+  padding: 8px 12px; white-space: nowrap; vertical-align: bottom;
+  border-bottom: 2px solid var(--oro);
+}
+th .chip { display: block; width: fit-content; margin-bottom: 4px; font-family: var(--texto); font-size: 12px; }
+td { padding: 7px 12px; border-top: 1px solid #2b2926; vertical-align: top; }
+tbody tr:hover td { background-color: rgba(255,255,255,.03); }
+.num-col { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.idx { color: #6d6962; text-align: right; width: 44px; }
+.codigo { font-weight: 600; white-space: nowrap; color: var(--oro-claro); }
+.malo { color: var(--rojo); font-weight: 600; }
+.muted { color: var(--gris); }
+
+/* ---------- 9. Resultado y botones ---------- */
+.barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.total { font-family: var(--display); font-size: 22px; font-weight: 700; }
+.total span { font-family: var(--texto); font-size: 14px; font-weight: 400; color: var(--gris); margin-left: 6px; }
+.acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.btn {
+  font: 600 15px var(--texto);
+  padding: 10px 16px; border: 1px solid #4a463f; background: var(--panel); color: var(--hueso); cursor: pointer;
+}
+.btn:hover { border-color: var(--oro); }
+.btn.principal { background: var(--oro); border-color: var(--oro); color: var(--negro); }
+.btn.principal:hover { background: var(--oro-claro); }
+.btn.discreto { background: transparent; border-color: transparent; color: var(--gris); }
+.btn.discreto:hover { color: var(--rojo); }
+.alerta { border-left: 4px solid var(--oro); background: #241f12; padding: 8px 12px; margin-bottom: 12px; font-size: 14px; }
+
+footer { max-width: 1200px; margin: 0 auto; padding: 0 24px 30px; color: #6d6962; font-size: 13px; }
+
+/* ---------- 10. Celular ---------- */
+@media (max-width: 760px) {
+  .logo { height: 60px; }
+  
+  .cabecera, main { padding-left: 16px; padding-right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* casilla dentro de la barra de acciones */
+.check.en-barra { margin: 0 8px 0 0; }
+
+/* columnas calculadas: en lugar de selector muestran cómo se calculan */
+.calculado-nota { margin: 8px 0 0; font-size: 13px; color: var(--gris); line-height: 1.35; }
+
+/* =========================================================
+   Acomodar columnas arrastrando (ver js/ordenar.js)
+   ========================================================= */
+
+/* asa: nombre de la columna con puntitos; de aquí se arrastra */
+.asa {
+  display: flex; align-items: center; gap: 8px;
+  background: transparent; border: 0; color: inherit; font: inherit;
+  padding: 4px 8px 4px 0; margin: -4px 0;
+  cursor: grab;
+  touch-action: none;          /* en celular, arrastrar no mueve la página */
+}
+.grip {
+  width: 10px; height: 16px; flex: none;
+  background-image: radial-gradient(circle, #8a857b 1.4px, transparent 1.7px);
+  background-size: 5px 5.33px;
+}
+.asa:hover .grip, .asa:focus-visible .grip {
+  background-image: radial-gradient(circle, var(--oro) 1.4px, transparent 1.7px);
+}
+
+/* lugar que ocupará la tarjeta mientras se arrastra */
+.selector.hueco { opacity: .35; border-style: dashed; }
+
+/* copia de la tarjeta que sigue al puntero */
+.selector.fantasma {
+  position: fixed; z-index: 50; margin: 0;
+  pointer-events: none;
+  background: var(--panel-2);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .6);
+  transform: rotate(-1.5deg) scale(1.03);
+}
+body.arrastrando, body.arrastrando * { cursor: grabbing !important; user-select: none; }
+
+/* texto solo para lectores de pantalla */
+.solo-lector {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* insignia en la tarjeta de factura (ej. "Nota de crédito") */
+.insignia {
+  display: inline-block; margin-left: 6px; padding: 0 6px;
+  background: var(--rojo); color: var(--negro);
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em;
+}

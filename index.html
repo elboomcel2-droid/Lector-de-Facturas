@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--
+  Lector de facturas XML | El Boom Tractopartes
+  Página principal. Solo contiene la ESTRUCTURA:
+    - Estilos:  css/estilos.css
+    - Lógica:   js/*.js (se cargan al final, en orden)
+    - App instalable: manifest.webmanifest + sw.js
+  Las secciones 1, 2 y 3 empiezan ocultas (hidden) y app.js las muestra
+  cuando hay facturas cargadas.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- App instalable (PWA): color de barra, manifest e íconos -->
+<meta name="theme-color" content="#141414">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lector XML">
+<title>Lector de facturas XML | El Boom Tractopartes</title>
+<!-- Tipografías (si no hay internet se usan fuentes similares del sistema) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<!-- Franja amarilla/negra de advertencia (decorativa) -->
+<div class="franja" aria-hidden="true"></div>
+
+<!-- CABECERA: logo, título y botón "Instalar app" (pwa.js lo muestra) -->
+<header class="cabecera">
+  <div class="cabecera-in">
+    <div class="marca">
+      <img class="logo" src="img/logo-cabecera.png" alt="Refaccionaria El Boom Tractopartes" width="199" height="80">
+      <h1>Lector de facturas XML</h1>
+    </div>
+    <div class="cabecera-der">
+      <p class="lema">Saca los datos de las partidas de las facturas de cualquier proveedor, directo del CFDI.</p>
+      <button class="btn principal" id="btnInstalar" hidden>Instalar app</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ZONA DE CARGA: clic o arrastrar XML. Se hace compacta cuando ya hay facturas -->
+  <label id="zona" class="zona" for="entrada" tabindex="0">
+    <div class="icono" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+    </div>
+    <div>
+      <strong id="zonaTitulo">Arrastra aquí los XML de las facturas</strong><br>
+      <span id="zonaSub">o haz clic para elegirlos. Puedes cargar varias facturas a la vez.</span>
+    </div>
+    <input type="file" id="entrada" accept=".xml,text/xml,application/xml" multiple hidden>
+  </label>
+  <!-- Avisos de archivos que no se pudieron leer -->
+  <div id="avisos" class="avisos"></div>
+
+  <!-- PASO 1: tarjetas de facturas cargadas (renderFacturas en app.js) -->
+  <section id="secFacturas" hidden>
+    <div class="titulo"><div class="num">1</div><h2>Facturas cargadas</h2></div>
+    <p class="nota">Elige una factura para revisar sus columnas.</p>
+    <div id="listaFacturas" class="facturas"></div>
+  </section>
+
+  <!-- PASO 2: elegir columnas y vista previa del XML (renderColumnas en app.js) -->
+  <section id="secColumnas" hidden>
+    <div class="titulo"><div class="num">2</div><h2 id="tituloColumnas">Columnas</h2></div>
+    <p class="nota">Indica qué columna del XML es cada dato. Puedes agregar, quitar y acomodar columnas arrastrándolas desde su nombre; todo se recuerda para la próxima vez.</p>
+    <div id="selectores" class="selectores"></div>
+    <label id="lblDesc" class="check" hidden>
+      <input type="checkbox" id="chkDesc">
+      <span>Restar el descuento de cada partida al precio unitario <small id="descInfo"></small></span>
+    </label>
+    <div class="tabla-caja"><table id="tablaVista"></table></div>
+  </section>
+
+  <!-- PASO 3: resultado final y exportación (renderResultado en app.js) -->
+  <section id="secResultado" hidden>
+    <div class="titulo"><div class="num">3</div><h2>Resultado</h2></div>
+    <div id="alertaMapa" class="alerta" hidden></div>
+    <div class="barra">
+      <div class="total" id="total"></div>
+      <div class="acciones">
+        <label class="check en-barra">
+          <input type="checkbox" id="chkExtra"> <span>Incluir proveedor y folio</span>
+        </label>
+        <button class="btn principal" id="btnCopiar">Copiar para Excel</button>
+        <button class="btn" id="btnExcel">Descargar Excel (plantilla)</button>
+        <button class="btn" id="btnCsv">Descargar CSV</button>
+        <button class="btn discreto" id="btnLimpiar">Quitar todas</button>
+      </div>
+    </div>
+    <div class="tabla-caja alta"><table id="tablaResultado"></table></div>
+  </section>
+</main>
+
+<!-- Avisos para lectores de pantalla (ej. "Código en la posición 2 de 4") -->
+<div id="anuncio" class="solo-lector" aria-live="polite"></div>
+
+<footer>Todo se procesa en esta computadora; las facturas no se envían a ningún lado.</footer>
+
+<!-- El orden importa: cada archivo usa funciones de los anteriores -->
+<script src="js/utilidades.js"></script>
+<script src="js/campos.js"></script>
+<script src="js/cfdi.js"></script>
+<script src="js/xlsx.js"></script>
+<script src="js/plantilla.js"></script>
+<script src="js/exportar.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ordenar.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
