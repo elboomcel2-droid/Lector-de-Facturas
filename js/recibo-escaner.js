@@ -92,97 +92,22 @@ function conectarPistola(campo, alLeer) {
   });
 
   // Regresa el cursor al recuadro si se pierde, para que la pistola nunca
-  // "escriba" en el lugar equivocado. No lo hace si hay una ventana abierta,
-  // si la cámara está encendida o si se está usando otro campo o botón.
+  // "escriba" en el lugar equivocado. No lo hace si hay una ventana abierta
+  // o si se está usando otro campo o botón.
   setInterval(() => {
     if (!mantenerCursor || campo.disabled) return;
-    if (document.body.classList.contains("con-ventana") || camaraEncendida()) return;
+    if (document.body.classList.contains("con-ventana")) return;
 
     const activo = document.activeElement;
     const ocupado = activo && ["INPUT", "SELECT", "TEXTAREA", "BUTTON", "A"].includes(activo.tagName);
-    if (!ocupado) campo.focus();
+    // preventScroll es importante: sin él el navegador salta hasta el recuadro
+    // cada vez que se toca un botón de la lista, y la página se va hasta arriba.
+    if (!ocupado) campo.focus({ preventScroll: true });
   }, 900);
 }
 
-/* =========================================================
-   CÁMARA
-   ========================================================= */
-
-/** Formatos de código de barras que se buscan (los de cajas y refacciones). */
-const FORMATOS = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf", "codabar", "qr_code"];
-
-/** @returns {boolean} Si el navegador puede leer códigos con la cámara. */
-const hayLectorDeCamara = () => "BarcodeDetector" in window;
-
-/**
- * Revisa si el dispositivo tiene cámara.
- * @returns {Promise<boolean>}
- */
-async function hayCamara() {
-  try {
-    const equipos = await navigator.mediaDevices.enumerateDevices();
-    return equipos.some((d) => d.kind === "videoinput");
-  } catch (e) {
-    return false;
-  }
-}
-
 /** @returns {boolean} Si el dispositivo parece un celular o tableta. */
-const esMovil = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-  (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
-
-/** Cámara en uso, o null. */
-let camara = null;
-
-/**
- * Enciende la cámara y avisa cada código que reconoce.
- * @param {HTMLVideoElement} video - Dónde se ve la imagen.
- * @param {Function} alLeer - Recibe el código leído.
- * @returns {Promise<void>}
- * @throws {Error} Si no hay permiso o el navegador no puede leer códigos.
- */
-async function encenderCamara(video, alLeer) {
-  if (!hayLectorDeCamara()) throw new Error("Este navegador no puede leer códigos con la cámara.");
-
-  const detector = new BarcodeDetector({ formats: FORMATOS });
-  const flujo = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment" }, // cámara trasera en celulares
-    audio: false,
-  });
-
-  video.srcObject = flujo;
-  await video.play();
-  camara = { flujo, activa: true };
-
-  let ultimo = "";
-  let ultimoTiempo = 0;
-
-  const revisar = async () => {
-    if (!camara?.activa) return;
-    try {
-      const codigos = await detector.detect(video);
-      const ahora = performance.now();
-      for (const c of codigos) {
-        // Evita contar el mismo código muchas veces mientras sigue frente a la cámara
-        if (c.rawValue === ultimo && ahora - ultimoTiempo < 1800) continue;
-        ultimo = c.rawValue;
-        ultimoTiempo = ahora;
-        alLeer(c.rawValue);
-      }
-    } catch (e) { /* un cuadro fallido no importa */ }
-    if (camara?.activa) setTimeout(revisar, 250);
-  };
-  revisar();
+function esMovil() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
 }
-
-/** Apaga la cámara y libera el equipo. */
-function apagarCamara(video) {
-  if (!camara) return;
-  camara.activa = false;
-  camara.flujo.getTracks().forEach((t) => t.stop());
-  camara = null;
-  if (video) video.srcObject = null;
-}
-
-/** @returns {boolean} Si la cámara está encendida. */
-const camaraEncendida = () => !!camara?.activa;

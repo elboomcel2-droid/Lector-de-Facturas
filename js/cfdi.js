@@ -26,6 +26,9 @@
  * @property {string}   fecha      - Fecha de emisión AAAA-MM-DD.
  * @property {string}   tipo       - TipoDeComprobante: "I" ingreso (factura) o "E" egreso (nota de crédito).
  * @property {string}   moneda     - Moneda del comprobante (MXN, USD…).
+ * @property {number}   tcBase     - Tipo de cambio capturado (0 si no aplica).
+ * @property {number}   tcPct      - Porcentaje que se le suma al tipo de cambio.
+ * @property {number}   tcFinal    - Tipo de cambio que se aplica a los precios.
  * @property {string[]} columnas   - Todos los atributos que aparecen en las partidas, en orden.
  * @property {Fila[]}   filas      - Las partidas.
  * @property {Object<string,string>} mapa - Para cada Campo.key, el atributo del XML elegido.
@@ -180,12 +183,83 @@ function leerCFDI(texto, nombreArchivo) {
     fecha: (comprobante.getAttribute("Fecha") || "").slice(0, 10),
     tipo,
     moneda: comprobante.getAttribute("Moneda") || "",
+    ...tipoCambioInicial(comprobante),
     columnas,
     filas,
     mapa,
     descTotal,
     restarDesc: descTotal > 0 && !!guardado?.restarDesc,
   };
+}
+
+/* =========================================================
+   FACTURAS EN DÓLARES
+   ========================================================= */
+
+/** Porcentaje que El Boom le suma al tipo de cambio por defecto. */
+const PCT_TC_POR_DEFECTO = 3;
+
+/** Clave de localStorage con el último tipo de cambio usado. */
+const CLAVE_TC = "lectorxml:tc";
+
+/** @returns {boolean} Si la factura viene en una moneda distinta al peso. */
+const enDolares = (factura) => !!factura.moneda && factura.moneda !== "MXN" && factura.moneda !== "XXX";
+
+/** Último tipo de cambio y porcentaje usados. @returns {{tc: number, pct: number}} */
+function ultimoTipoCambio() {
+  try {
+    const g = JSON.parse(localStorage.getItem(CLAVE_TC));
+    return { tc: num(g?.tc) || 0, pct: num(g?.pct) ?? PCT_TC_POR_DEFECTO };
+  } catch (e) {
+    return { tc: 0, pct: PCT_TC_POR_DEFECTO };
+  }
+}
+
+/** Guarda el tipo de cambio para proponerlo en las siguientes facturas. */
+function guardarTipoCambio(tc, pct) {
+  try { localStorage.setItem(CLAVE_TC, JSON.stringify({ tc, pct })); } catch (e) {}
+}
+
+/**
+ * Tipo de cambio que se propone al cargar una factura: el del propio CFDI
+ * si lo trae, si no el último que se usó. El porcentaje es el de la empresa.
+ * @param {Element} comprobante
+ * @returns {{tcBase: number, tcPct: number, tcFinal: number}}
+ */
+function tipoCambioInicial(comprobante) {
+  const moneda = comprobante.getAttribute("Moneda") || "";
+  if (!moneda || moneda === "MXN" || moneda === "XXX") return { tcBase: 0, tcPct: 0, tcFinal: 0 };
+
+  const ultimo = ultimoTipoCambio();
+  const tcBase = num(comprobante.getAttribute("TipoCambio")) || ultimo.tc;
+  const tcPct = ultimo.pct;
+  return { tcBase, tcPct, tcFinal: calcularTcFinal(tcBase, tcPct) };
+}
+
+/**
+ * Tipo de cambio con el porcentaje aplicado, cortado a 4 decimales
+ * (no se redondea hacia arriba, igual que se maneja en la empresa).
+ * Ej.: 18.3688 con 3% queda en 18.9198.
+ * @param {number} tc
+ * @param {number} pct
+ * @returns {number}
+ */
+function calcularTcFinal(tc, pct) {
+  if (!tc) return 0;
+  const exacto = Math.round(tc * (1 + (pct || 0) / 100) * 1e6) / 1e6; // quita la basura decimal
+  return Math.floor(exacto * 10000) / 10000;
+}
+
+/**
+ * Convierte un importe a pesos si la factura viene en dólares.
+ * Es el único lugar donde se hace la conversión.
+ * @param {Factura} factura
+ * @param {number|null} numero
+ * @returns {number|null}
+ */
+function aPesos(factura, numero) {
+  if (numero == null || !enDolares(factura) || !factura.tcFinal) return numero;
+  return numero * factura.tcFinal;
 }
 
 /* =========================================================
@@ -225,7 +299,8 @@ function valorDe(factura, fila, campo) {
   const texto = fila[col] ?? "";
   if (campo.tipo === "texto") return { texto, numero: null };
   const numero = campo.key === "precio" ? precioDe(factura, fila) : num(texto);
-  return { texto, numero };
+  // Los importes de una factura en dólares se entregan ya convertidos a pesos
+  return { texto, numero: campo.tipo === "dinero" ? aPesos(factura, numero) : numero };
 }
 
 /**

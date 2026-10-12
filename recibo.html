@@ -52,10 +52,10 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
       </div>
       <div>
-        <strong>Arrastra aquí el XML de la factura</strong><br>
-        <span>o haz clic para elegirlo. Es el mismo XML que usas en el lector de facturas.</span>
+        <strong>Arrastra aquí los XML de las facturas</strong><br>
+        <span>Puedes cargar varias a la vez, del mismo proveedor o de proveedores distintos.</span>
       </div>
-      <input type="file" id="entrada" accept=".xml,text/xml,application/xml" hidden>
+      <input type="file" id="entrada" accept=".xml,text/xml,application/xml" multiple hidden>
     </label>
     <div id="avisos" class="avisos"></div>
 
@@ -67,7 +67,19 @@
     </div>
   </section>
 
-  <!-- ============ PASO 2: CONTAR ============ -->
+  <!-- ============ PASO 2: REVISAR LAS COLUMNAS DE LA FACTURA ============ -->
+  <section id="secColumnas" hidden>
+    <div class="titulo"><div class="num">2</div><h2 id="tituloColumnas">Columnas de la factura</h2></div>
+    <p class="nota" id="notaColumnas">Revisa que cada dato venga de la columna correcta. Se recuerda para las próximas facturas de este proveedor.</p>
+    <div id="selectoresRecibo" class="selectores"></div>
+    <div class="tabla-caja"><table id="tablaVista"></table></div>
+    <div class="acciones-final">
+      <button class="btn principal" id="btnUsarColumnas">Usar estas columnas</button>
+      <button class="btn discreto" id="btnOmitirFactura">Omitir esta factura</button>
+    </div>
+  </section>
+
+  <!-- ============ PASO 3: CONTAR ============ -->
   <section id="secContar" hidden>
 
     <!-- Datos de la factura y avance -->
@@ -76,8 +88,14 @@
         <strong id="provConteo"></strong>
         <span id="datosConteo" class="muted"></span>
       </div>
-      <button class="btn discreto" id="btnCerrar">Cerrar revisión</button>
+      <div class="acciones-conteo">
+        <button class="btn" id="btnAgregarFactura">+ Agregar factura</button>
+        <button class="btn discreto" id="btnCerrar">Cerrar revisión</button>
+        <input type="file" id="entradaMas" accept=".xml,text/xml,application/xml" multiple hidden>
+      </div>
     </div>
+    <div id="avisosConteo" class="avisos"></div>
+    <div id="listaFacturasConteo" class="facturas-conteo"></div>
 
     <div class="barra-avance"><div id="avance"></div></div>
     <div id="marcador" class="marcador"></div>
@@ -90,16 +108,8 @@
                autocorrect="off" spellcheck="false" inputmode="text"
                placeholder="Dispara la pistola aquí…">
       </label>
-      <button class="btn" id="btnCamara" hidden>Usar cámara</button>
     </div>
     <p id="ultimo" class="ultimo" hidden></p>
-
-    <!-- Cámara -->
-    <div id="cajaCamara" class="caja-camara" hidden>
-      <video id="video" playsinline muted></video>
-      <div class="mira" aria-hidden="true"></div>
-      <button class="btn" id="btnApagarCamara">Apagar cámara</button>
-    </div>
 
     <!-- Filtros y lista de artículos -->
     <div class="filtros" role="group" aria-label="Filtrar artículos">
@@ -110,6 +120,7 @@
       <input type="search" id="buscar" placeholder="Buscar código o descripción" aria-label="Buscar artículo">
     </div>
 
+    <p class="nota">Toca un artículo de la lista para anotar cuántas piezas llegaron, sin escanear.</p>
     <div id="listaPartidas" class="partidas"></div>
 
     <!-- Mercancía que no viene en la factura -->
@@ -119,7 +130,8 @@
     </div>
 
     <div class="acciones-final">
-      <button class="btn principal" id="btnReporte">Descargar reporte</button>
+      <button class="btn principal" id="btnPdf">Descargar reporte PDF</button>
+      <button class="btn" id="btnReporte">Descargar Excel</button>
       <button class="btn" id="btnCopiarReporte">Copiar reporte</button>
       <button class="btn discreto" id="btnReiniciar">Reiniciar conteo</button>
     </div>
@@ -141,6 +153,66 @@
   </div>
 </div>
 
+<!-- ============ VENTANA: CUÁNTAS PIEZAS LLEGARON ============ -->
+<div id="ventanaCantidad" class="ventana" hidden role="dialog" aria-modal="true" aria-labelledby="tituloCantidad">
+  <div class="ventana-caja cantidad">
+    <h2 id="tituloCantidad">¿Cuántas piezas llegaron?</h2>
+    <div class="art-info">
+      <div class="codigo" id="cantCodigo"></div>
+      <div class="desc" id="cantDesc"></div>
+      <div class="etiqueta-factura" id="cantFact"></div>
+    </div>
+    <div class="art-cifras">
+      <div><b id="cantFactura">0</b><span>De factura</span></div>
+      <div><b id="cantYa">0</b><span>Ya contadas</span></div>
+      <div class="falta"><b id="cantFaltan">0</b><span>Faltan</span></div>
+    </div>
+    <div class="teclado">
+      <button class="btn" id="btnMenosCant" aria-label="Quitar una pieza">−</button>
+      <input type="number" id="campoCantidad" min="0" step="1" inputmode="numeric" aria-label="Piezas que llegaron">
+      <button class="btn" id="btnMasCant" aria-label="Agregar una pieza">+</button>
+    </div>
+    <div class="ventana-botones">
+      <button class="btn principal" id="btnConfirmarCant">Agregar al conteo</button>
+      <button class="btn discreto" id="btnCancelarCant">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VENTANA: ¿DE QUÉ FACTURA? ============ -->
+<div id="ventanaFactura" class="ventana" hidden role="dialog" aria-modal="true" aria-labelledby="tituloFactura">
+  <div class="ventana-caja">
+    <h2 id="tituloFactura">¿De qué factura es?</h2>
+    <div class="art-info">
+      <div class="codigo" id="dupCodigo"></div>
+      <div class="desc" id="dupDesc"></div>
+    </div>
+    <p class="nota">Este artículo viene en más de una factura de la revisión. Elige a cuál se le carga.</p>
+    <div id="opcionesFactura" class="opciones"></div>
+    <div class="ventana-botones">
+      <button class="btn discreto" id="btnCancelarFactura">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VENTANA: NOTA DEL ARTÍCULO ============ -->
+<div id="ventanaNota" class="ventana" hidden role="dialog" aria-modal="true" aria-labelledby="tituloNota">
+  <div class="ventana-caja">
+    <h2 id="tituloNota">Nota del artículo</h2>
+    <div class="art-info">
+      <div class="codigo" id="notaCodigo"></div>
+      <div class="desc" id="notaDesc"></div>
+    </div>
+    <p class="nota">Escribe qué pasó con este artículo. La nota sale en el reporte.</p>
+    <textarea id="campoNota" rows="3" placeholder="Ej.: llegaron 3 piezas dañadas, el resto queda pendiente"></textarea>
+    <div class="ventana-botones">
+      <button class="btn principal" id="btnGuardarNota">Guardar nota</button>
+      <button class="btn" id="btnBorrarNota">Quitar nota</button>
+      <button class="btn discreto" id="btnCancelarNota">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div id="anuncio" class="solo-lector" aria-live="polite"></div>
 
 <footer>Todo se procesa en este dispositivo; las facturas no se envían a ningún lado.</footer>
@@ -150,8 +222,10 @@
 <script src="js/campos.js"></script>
 <script src="js/cfdi.js"></script>
 <script src="js/xlsx.js"></script>
+<script src="js/pdf.js"></script>
 <script src="js/recibo-conteo.js"></script>
 <script src="js/recibo-escaner.js"></script>
+<script src="js/recibo-reporte.js"></script>
 <script src="js/recibo-app.js"></script>
 <script src="js/pwa.js"></script>
 </body>

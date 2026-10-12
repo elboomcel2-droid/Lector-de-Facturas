@@ -4,7 +4,11 @@ Dos pantallas que trabajan con el mismo XML del CFDI:
 
 1. **Lector de facturas** (`index.html`): saca las partidas y las exporta a Excel.
 2. **Revisión de mercancía** (`recibo.html`): cuenta con pistola de código de
-   barras o con la cámara lo que llega del proveedor y lo compara contra la factura.
+   barras (o tocando el artículo en la lista) lo que llega del proveedor y lo
+   compara contra **una o varias facturas** a la vez. Antes de contar muestra
+   la factura y deja elegir de qué columna sale el código, la descripción y la
+   cantidad. Saca el reporte en PDF (una sección por factura, con
+   colores) o en Excel (con proveedor y folio en cada renglón).
 
 El lector extrae por defecto código, descripción y precio unitario; se pueden
 agregar o quitar columnas (cantidad, unidad, clave SAT, importe, descuento,
@@ -35,13 +39,15 @@ lector-facturas-xml/
     ├── campos.js       Catálogo de columnas, agregar/quitar y su orden
     ├── cfdi.js         Lectura del XML y memoria por proveedor
     ├── xlsx.js         Generador de .xlsx sin librerías (ZIP + XML)
+    ├── pdf.js          Generador de PDF sin librerías (Helvetica + WinAnsi)
     ├── plantilla.js    Plantilla "Partidas de compra" (Artículo, Cantidad, Costo)
     ├── exportar.js     Armado del resultado, copiar para Excel y CSV
     ├── app.js          Estado, pintado de pantalla y eventos
     ├── ordenar.js      Acomodar columnas arrastrando (mouse, táctil y teclado)
     ├── pwa.js          Registro del service worker y botón "Instalar app"
     ├── recibo-conteo.js   Motor del conteo, equivalencias de códigos y guardado
-    ├── recibo-escaner.js  Pistola de escaneo, cámara, sonido y vibración
+    ├── recibo-escaner.js  Pistola de escaneo, sonido y vibración
+    ├── recibo-reporte.js   Reporte de la revisión en PDF y en Excel
     └── recibo-app.js      Pantalla y eventos de la revisión
 ```
 
@@ -58,6 +64,19 @@ para que funcione con doble clic sin servidor.
   en `CATALOGO` y su fórmula va en `valorCalculado` de `js/cfdi.js`.
 - **Plantilla de Excel:** arreglo `PLANTILLA` en `js/plantilla.js`; cada entrada
   es una columna con su título, ancho y una función `valor(factura, fila)`.
+- **Columnas de la revisión:** `CAMPOS_RECIBO` en `js/recibo-conteo.js`;
+  se guardan por proveedor en `lectorxml:RFC`, igual que el lector.
+- **Columnas de cada factura en la revisión:** `CAMPOS_RECIBO` y
+  `columnasPropuestas()` en `js/recibo-conteo.js`; se guardan por RFC en
+  `lectorxml:RFC`, compartidas con el lector de facturas.
+- **Modelo de la revisión:** `sesion` en `js/recibo-conteo.js`: un arreglo de
+  facturas, cada una con sus partidas. Una partida se identifica con `fi`
+  (factura) y `pi` (partida).
+- **Facturas en dólares:** `calcularTcFinal()` y `aPesos()` en `js/cfdi.js`;
+  el tipo de cambio se corta a 4 decimales y el último usado se guarda en
+  `lectorxml:tc`.
+- **Colores del reporte PDF:** `clasificar()` en `js/recibo-reporte.js`
+  (verde completo, azul revisar, rojo no llegó).
 - **Equivalencias de códigos de barras:** `buscarPartida()` en `js/recibo-conteo.js`.
 - **Tipos de CFDI aceptados:** `TIPOS_RECHAZADOS` en `js/cfdi.js` (se rechazan
   complementos de pago, traslados y nómina).
@@ -69,7 +88,7 @@ para que funcione con doble clic sin servidor.
 
 - `lectorxml:campos`: las columnas activas.
 - `lectorxml:RFC`: la columna del XML elegida para cada dato, por proveedor.
-- `recibo:conteo:UUID`: avance del conteo de una factura.
+- `recibo:conteo:ID`: avance de una revisión (con todas sus facturas).
 - `recibo:alias:RFC`: equivalencias entre códigos de barras y códigos de la factura.
 
 Cada computadora guarda lo suyo.
@@ -78,4 +97,4 @@ Cada computadora guarda lo suyo.
 
 El service worker siempre busca primero la versión más nueva en el servidor.
 Si agregas un archivo nuevo, súmalo a `ARCHIVOS` en `sw.js` y cambia `VERSION`
-(la actual es `lector-xml-v5`; la siguiente, `lector-xml-v6`) para que la copia sin internet también se actualice.
+(la actual es `lector-xml-v10`; la siguiente, `lector-xml-v11`) para que la copia sin internet también se actualice.

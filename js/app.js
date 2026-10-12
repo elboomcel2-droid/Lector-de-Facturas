@@ -97,7 +97,9 @@ function renderFacturas() {
         <strong>${esc(f.proveedor)}</strong>
         <span>${esc(f.rfc)}</span>
         <span>Folio ${esc(f.folio || "sin folio")}, ${esc(f.fecha)}</span>
-        <span class="cuenta">${f.filas.length} partidas${f.tipo === "E" ? ` <span class="insignia">Nota de crédito</span>` : ""}</span>
+        <span class="cuenta">${f.filas.length} partidas${
+          f.tipo === "E" ? ` <span class="insignia">Nota de crédito</span>` : ""}${
+          enDolares(f) ? ` <span class="insignia usd">${esc(f.moneda)}</span>` : ""}</span>
       </button>
       <button class="quitar" data-quitar="${f.id}" aria-label="Quitar factura de ${esc(f.proveedor)}">×</button>
     </div>`).join("");
@@ -151,6 +153,9 @@ function renderColumnas() {
 
   $("selectores").innerHTML = tarjetas + tarjetaAgregar;
 
+  // Panel de tipo de cambio: solo en facturas que no vienen en pesos
+  renderTipoCambio(f);
+
   // Casilla "restar descuento": solo si hay precio unitario, la factura trae descuento
   // y el precio sale de ValorUnitario (el único caso donde la fórmula aplica)
   const verDesc = f.descTotal > 0 && campos.some((c) => c.key === "precio") && f.mapa.precio === "ValorUnitario";
@@ -175,6 +180,49 @@ function renderColumnas() {
 }
 
 /**
+ * Panel del tipo de cambio de la factura seleccionada.
+ * Solo aparece cuando la factura viene en una moneda distinta al peso.
+ * @param {Factura} f
+ */
+function renderTipoCambio(f) {
+  const dolares = enDolares(f);
+  $("cajaTc").hidden = !dolares;
+  if (!dolares) return;
+
+  $("tcMoneda").textContent = f.moneda;
+  $("campoTc").value = f.tcBase || "";
+  $("campoTcPct").value = f.tcPct ?? "";
+  $("campoTcFinal").value = f.tcFinal ? f.tcFinal.toFixed(4) : "";
+}
+
+/**
+ * Recalcula el tipo de cambio de la factura seleccionada con lo que
+ * se escribió en el panel y vuelve a dibujar los precios.
+ */
+function actualizarTipoCambio() {
+  const f = facturaActiva();
+  f.tcBase = num($("campoTc").value) || 0;
+  f.tcPct = num($("campoTcPct").value) || 0;
+  f.tcFinal = calcularTcFinal(f.tcBase, f.tcPct);
+
+  // Se recuerda para proponerlo en las siguientes facturas en dólares
+  if (f.tcBase) guardarTipoCambio(f.tcBase, f.tcPct);
+
+  $("campoTcFinal").value = f.tcFinal ? f.tcFinal.toFixed(4) : "";
+  renderResultado();
+}
+
+/**
+ * Permite corregir a mano el tipo de cambio aplicado, por si la empresa
+ * maneja otro valor al del cálculo.
+ */
+function tipoCambioManual() {
+  const f = facturaActiva();
+  f.tcFinal = num($("campoTcFinal").value) || 0;
+  renderResultado();
+}
+
+/**
  * Paso 3: tabla final con las partidas de todas las facturas,
  * aviso de columnas sin asignar y total de partidas.
  */
@@ -188,10 +236,23 @@ function renderResultado() {
   const faltantes = facturas
     .map((f) => ({ f, faltan: campos.filter((c) => !c.calculado && !f.mapa[c.key]).map((c) => c.label) }))
     .filter((x) => x.faltan.length);
-  $("alertaMapa").hidden = !faltantes.length;
-  $("alertaMapa").textContent = faltantes.length
-    ? "Columnas sin elegir: " + faltantes.map((x) => `${x.f.proveedor} (${x.faltan.join(", ")})`).join("; ") + "."
-    : "";
+  // Facturas en dólares: avisar si falta el tipo de cambio, o indicar el que se aplicó
+  const sinTc = facturas.filter((f) => enDolares(f) && !f.tcFinal);
+  const conTc = facturas.filter((f) => enDolares(f) && f.tcFinal);
+
+  const avisos = [];
+  if (faltantes.length) {
+    avisos.push("Columnas sin elegir: " + faltantes.map((x) => `${x.f.proveedor} (${x.faltan.join(", ")})`).join("; ") + ".");
+  }
+  if (sinTc.length) {
+    avisos.push("Falta el tipo de cambio de: " + sinTc.map((f) => `${f.proveedor} (${f.moneda})`).join(", ") +
+      ". Esos precios salen en su moneda original.");
+  }
+  if (conTc.length) {
+    avisos.push("Convertido a pesos: " + conTc.map((f) => `${f.proveedor} a ${f.tcFinal.toFixed(4)}`).join(", ") + ".");
+  }
+  $("alertaMapa").hidden = !avisos.length;
+  $("alertaMapa").textContent = avisos.join(" ");
 
   const alinear = (c) => (c.tipo === "texto" ? "" : "num-col"); // números a la derecha
 
@@ -312,6 +373,11 @@ $("chkDesc").addEventListener("change", (e) => {
 });
 
 // --- Paso 3: acciones del resultado ---
+// Tipo de cambio de las facturas en dólares
+$("campoTc").addEventListener("input", actualizarTipoCambio);
+$("campoTcPct").addEventListener("input", actualizarTipoCambio);
+$("campoTcFinal").addEventListener("input", tipoCambioManual);
+
 $("chkExtra").addEventListener("change", renderResultado);
 
 $("btnCopiar").addEventListener("click", async () => {

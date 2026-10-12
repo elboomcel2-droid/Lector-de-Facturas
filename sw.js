@@ -12,7 +12,7 @@
  */
 
 /** Nombre de la copia (caché). Cambiarlo borra las copias anteriores. */
-const VERSION = "lector-xml-v5";
+const VERSION = "lector-xml-v10";
 
 /** Archivos que se guardan al instalar para funcionar sin internet. */
 const ARCHIVOS = [
@@ -26,12 +26,14 @@ const ARCHIVOS = [
   "./js/campos.js",
   "./js/cfdi.js",
   "./js/xlsx.js",
+  "./js/pdf.js",
   "./js/plantilla.js",
   "./js/exportar.js",
   "./js/app.js",
   "./js/ordenar.js",
   "./js/recibo-conteo.js",
   "./js/recibo-escaner.js",
+  "./js/recibo-reporte.js",
   "./js/recibo-app.js",
   "./js/pwa.js",
   "./img/logo-cabecera.png",

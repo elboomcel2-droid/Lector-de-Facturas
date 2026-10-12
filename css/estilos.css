@@ -275,3 +275,42 @@ body.arrastrando, body.arrastrando * { cursor: grabbing !important; user-select:
   background: var(--rojo); color: var(--negro);
   font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em;
 }
+
+/* =========================================================
+   Facturas en dólares: tipo de cambio (ver app.js)
+   ========================================================= */
+.caja-tc {
+  background: var(--panel); border: 1px solid var(--linea); border-left: 5px solid var(--verde);
+  padding: 14px; margin-bottom: 14px;
+}
+.tc-titulo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 12px; }
+.tc-titulo strong { font-family: var(--display); font-size: 20px; }
+.tc-titulo .muted { color: var(--gris); font-size: 14px; }
+.insignia-moneda {
+  background: var(--verde); color: var(--negro);
+  font-weight: 700; font-size: 12px; letter-spacing: .04em; padding: 2px 8px;
+}
+.tc-campos { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.tc-campos label { display: block; }
+.tc-campos label span {
+  display: block; font-size: 12px; color: var(--gris);
+  text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px;
+}
+.tc-campos input {
+  width: 160px; max-width: 100%;
+  background: var(--panel-2); color: var(--hueso); border: 1px solid #45423c;
+  padding: 10px; font-family: var(--display); font-size: 22px;
+}
+.tc-resultado { padding-left: 12px; border-left: 2px solid var(--linea); }
+.tc-resultado span {
+  display: block; font-size: 12px; color: var(--gris);
+  text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px;
+}
+.tc-resultado input {
+  width: 170px; background: var(--panel-2); color: var(--verde);
+  border: 2px solid var(--verde); padding: 8px 10px;
+  font-family: var(--display); font-size: 28px;
+}
+
+/* etiqueta de moneda en la tarjeta de la factura */
+.insignia.usd { background: var(--verde); }

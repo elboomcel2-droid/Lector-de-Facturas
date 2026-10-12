@@ -47,8 +47,9 @@ const PLANTILLA = [
       const c = num(fila.Cantidad);
       return c == null ? "" : String(c);
     } },
-  // Costo: precio unitario. Respeta la casilla "restar el descuento al precio unitario".
-  { titulo: "Costo",    ancho: 10.57, valor: (f, fila) => dec2(precioDe(f, fila)) },
+  // Costo: precio unitario. Respeta la casilla "restar el descuento al precio unitario"
+  // y, si la factura viene en dólares, sale ya convertido a pesos.
+  { titulo: "Costo",    ancho: 10.57, valor: (f, fila) => dec2(aPesos(f, precioDe(f, fila))) },
 ];
 
 /**
@@ -60,6 +61,16 @@ const PLANTILLA = [
 function descargarPlantilla(facturas, nombreArchivo) {
   // La plantilla no tiene columna de descuento: si la factura trae descuento
   // y no está marcada la casilla, el Costo saldría sin descontar.
+  // Si una factura en dólares no tiene tipo de cambio, el Costo saldría en dólares
+  const sinTc = facturas.filter((f) => enDolares(f) && !f.tcFinal);
+  if (sinTc.length) {
+    alert(
+      `Falta el tipo de cambio de: ${sinTc.map((f) => f.proveedor).join(", ")}.\n\n` +
+      `Captúralo en el paso 2 para que el Costo salga en pesos.`
+    );
+    return;
+  }
+
   const sinDescontar = facturas.filter((f) => f.descTotal > 0 && !f.restarDesc);
   if (sinDescontar.length) {
     const nombres = sinDescontar.map((f) => f.proveedor).join(", ");
